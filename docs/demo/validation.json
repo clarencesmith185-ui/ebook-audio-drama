@@ -1,0 +1,21 @@
+{
+  "duration": 10.750041666666666,
+  "voice_gain_db": 0,
+  "peak": 0.5500447135345704,
+  "decoded_peak": 0.5215129256248474,
+  "asset_listening": "unreviewed draft",
+  "full_mix_listening": "pending",
+  "voice_pcm_sha256": "0a3d654898ea3daf12e901d6c00d933fe03c47dde4fba967090ae7261a4d903c",
+  "source_reconstruction": "PASS",
+  "source_sha256": "18188c8424750fc197a5ac772a772adaeb0fdc635e7c2d1d129674ee877db42b",
+  "files": {
+    "cafe-voices.mp3": {
+      "sha256": "c5b93084d68a5fd0b107564cd7c05fcce5100686dacf6acb15f6ffcf3bf11f05",
+      "bytes": 129933
+    },
+    "cafe-rain.mp3": {
+      "sha256": "59aa468f7ff49cd6051039dbdee40fbd4b07ab6d5daf8f13f94228c56ca9af89",
+      "bytes": 129933
+    }
+  }
+}

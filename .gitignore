@@ -15,3 +15,6 @@ build/
 *.flac
 kaggle.json
 *credentials*
+
+# Only the original public listening demo may be committed.
+!docs/demo/*.mp3

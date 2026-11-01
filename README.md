@@ -23,7 +23,15 @@ EPUB spine → normalized source → reviewed speaker spans → character/voice 
 - Imports returned voice references without losing other chapters' cast records.
 - Packages prompt-only TangoFlux sound generation and mixes scene-timed ambience/Foley beneath unchanged voices; see [background sounds](docs/SOUND_DESIGN.md).
 
-**Status:** initial reference implementation. The underlying approach has been exercised in a separate private pilot/chapter workflow. The original speech workflow passed **13 offline contract tests**; its GPU path and Kaggle bootstrap have **not yet been end-to-end tested**. No book or generated voice samples from that private project are included.
+**Status:** initial reference implementation. The underlying approach has been exercised in a separate private pilot/chapter workflow. The original speech workflow passed **13 offline contract tests**; the original public demo has now completed GPU speech and ambience generation, voice import, local mixing and technical audio validation (listening approval remains pending). No book or generated voice samples from that private project are included.
+
+## Listen to the original demo
+
+**[▶ Play the café demo](https://clarencesmith185-ui.github.io/ebook-audio-drama/demo/)** — 10.75 seconds, three original synthetic voices and quiet rain.
+
+[Download voices + rain](https://raw.githubusercontent.com/clarencesmith185-ui/ebook-audio-drama/main/docs/demo/cafe-rain.mp3) · [Download voice-only comparison](https://raw.githubusercontent.com/clarencesmith185-ui/ebook-audio-drama/main/docs/demo/cafe-voices.mp3) · [Transcript and technical checks](docs/demo/)
+
+GitHub README pages do not reliably embed audio players; the listening page provides standard browser audio controls. **Unreviewed experimental draft:** technical audio/source/voice-binding checks passed; listening approval and audible word accuracy remain pending. The mixed audio is a non-commercial research demonstration subject to TangoFlux checkpoint terms, not the repository's MIT code license.
 
 ## Quick start: original demo
 
