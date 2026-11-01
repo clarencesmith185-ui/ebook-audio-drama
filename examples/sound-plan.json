@@ -1,0 +1,11 @@
+{
+  "master_sha256": "REPLACE_WITH_SHA256_OF_YOUR_MONO_PCM16_MASTER",
+  "start_frame": 0,
+  "end_frame": 240000,
+  "assets": [
+    {"id": "rain", "prompt": "Soft rain tapping a cafe window, quiet natural ambience, no music or voices.", "seconds": 10, "seed": 12001}
+  ],
+  "cues": [
+    {"asset": "rain", "kind": "ambience", "start": 0, "end": 10, "below_speech_db": 20, "evidence": "Original demo opening: Rain tapped the cafe window. Source-supported setting; timing must be rebased to your actual rendered audio."}
+  ]
+}

@@ -1,0 +1,29 @@
+import subprocess,sys,os,json,hashlib,time
+from pathlib import Path
+os.environ['HF_HUB_DISABLE_XET']='1'
+os.environ['HF_HOME']='/tmp/tangoflux-hf'
+os.environ['PIP_CACHE_DIR']='/tmp/tangoflux-pip'
+subprocess.run([sys.executable,'-m','pip','install','--quiet','git+https://github.com/declare-lab/TangoFlux.git@164420faa2b3f8a28bb013ccde7006422a616fc7','sentencepiece','soundfile'],check=True)
+import torch,numpy as np,soundfile as sf
+from huggingface_hub import snapshot_download
+from tangoflux import TangoFluxInference
+assert torch.cuda.is_available(),'GPU required'
+print('GPU',torch.cuda.get_device_name(0),flush=True)
+model_path=snapshot_download('declare-lab/TangoFlux',revision='367005e963cb3a9fb2e03a46104d7de23e34ceea')
+import tangoflux
+tangoflux.snapshot_download=lambda **kwargs:model_path
+model=TangoFluxInference(name='declare-lab/TangoFlux',device='cuda')
+out=Path('/kaggle/working/assets');out.mkdir(exist_ok=True)
+assets=ASSET_PAYLOAD
+records=[]
+for a in assets:
+ torch.manual_seed(a['seed']);torch.cuda.manual_seed_all(a['seed'])
+ t=time.time();audio=model.generate(a['prompt'],steps=50,duration=a['seconds'])
+ x=audio.detach().cpu().float().numpy().T
+ assert np.isfinite(x).all() and np.max(np.abs(x))>0
+ raw_peak=float(np.max(np.abs(x))); x=x*min(1.0,0.90/max(raw_peak,1e-9))
+ path=out/(a['id']+'.wav');sf.write(path,x,44100,subtype='PCM_24')
+ records.append(dict(**a,sha256=hashlib.sha256(path.read_bytes()).hexdigest(),frames=len(x),sr=44100,peak=float(np.max(np.abs(x))),elapsed=time.time()-t))
+ print('SAVED',a['id'],records[-1],flush=True)
+ (out/'manifest.json').write_text(json.dumps(records,indent=2))
+print('GENERATION_COMPLETE',flush=True)

@@ -34,9 +34,17 @@ def main():
     p=sub.add_parser('kaggle-package');p.add_argument('project');p.add_argument('chapter');p.add_argument('slug');p.add_argument('destination');p.add_argument('--reference-kernel');p.add_argument('--design-missing',action='store_true')
     p=sub.add_parser('import-voices');p.add_argument('project');p.add_argument('returned_project')
     p=sub.add_parser('mp3');p.add_argument('wav');p.add_argument('output')
+    p=sub.add_parser('sound-package');p.add_argument('plan');p.add_argument('slug');p.add_argument('destination')
+    p=sub.add_parser('sound-mix');p.add_argument('plan');p.add_argument('master');p.add_argument('assets');p.add_argument('output');p.add_argument('--unreviewed-draft',action='store_true');p.add_argument('--review');p.add_argument('--background-boost-db',type=float,default=0)
     a=ap.parse_args()
     try:
-        if a.command=='extract':
+        if a.command=='sound-package':
+            from .sound import package
+            print(package(a.plan,a.slug,a.destination))
+        elif a.command=='sound-mix':
+            from .sound import mix
+            print(mix(a.plan,a.master,a.assets,a.output,a.unreviewed_draft,a.review,a.background_boost_db))
+        elif a.command=='extract':
             from .epub import extract
             print(json.dumps(extract(a.epub,a.project),ensure_ascii=False,indent=2))
         elif a.command=='demo':print(make_demo(a.project))

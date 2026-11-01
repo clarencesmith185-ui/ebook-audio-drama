@@ -1,4 +1,4 @@
-# EPUB → Audio Drama
+# Ebook → Audio Drama
 
 **The original words. A persistent voice for each person.**
 
@@ -21,8 +21,9 @@ EPUB spine → normalized source → reviewed speaker spans → character/voice 
 - Saves per-segment audio/checkpoints and chapter-to-voice bindings; resumes matching runs.
 - Packages a selected chapter for a **private Kaggle GPU notebook**, including only needed inputs.
 - Imports returned voice references without losing other chapters' cast records.
+- Packages prompt-only TangoFlux sound generation and mixes scene-timed ambience/Foley beneath unchanged voices; see [background sounds](docs/SOUND_DESIGN.md).
 
-**Status:** initial reference implementation. The underlying approach has been exercised in a separate private pilot/chapter workflow. This cleaned package has passed **13 offline contract tests**; its GPU path and Kaggle bootstrap have **not yet been end-to-end tested**. No book or generated voice samples from that private project are included.
+**Status:** initial reference implementation. The underlying approach has been exercised in a separate private pilot/chapter workflow. The original speech workflow passed **13 offline contract tests**; its GPU path and Kaggle bootstrap have **not yet been end-to-end tested**. No book or generated voice samples from that private project are included.
 
 ## Quick start: original demo
 
@@ -107,7 +108,11 @@ See [the project format](docs/PROJECT_FORMAT.md), [casting guide](docs/CASTING.m
 
 Text equality, valid WAVs and reused reference hashes **do not prove** that TTS pronounced every word, retained the intended emotion or avoided voice drift. Pronunciation review, ASR alignment and listening remain separate tasks.
 
-Not included yet: automatic reliable speaker attribution, a review GUI, automatic ASR-based repair, background-music/soundscape generation, scene-timed SFX mixing, M4B export or an automatic live-log monitor. Speech stays in a clean stem so atmosphere can be mixed later without regenerating voices.
+Not included yet: automatic reliable speaker attribution, a review GUI, automatic ASR-based repair, background-music generation, M4B export or an automatic live-log monitor. Speech stays in a clean stem so atmosphere can be mixed later without regenerating voices.
+
+## Background sounds
+
+See [the sound workflow](docs/SOUND_DESIGN.md) for private Kaggle generation, safe waveform saving, hash-bound asset review, scene timing, non-destructive mixing and louder-background revisions. Audio dependencies are optional: `pip install -e '.[sound]'`.
 
 ## Development
 
