@@ -1,0 +1,66 @@
+"""Explicit local commands; no provider credentials or remote launch side effects."""
+import argparse,json,sys,subprocess
+from pathlib import Path
+from .core import ContractError,load,save,bindings,plan_voice,digest
+
+def make_demo(project):
+    project=Path(project)
+    if project.exists() and any(project.iterdir()):raise ContractError('Use an empty demo project directory')
+    parts=[('narrator','Rain tapped the café window. '),('maya','“The last train leaves at nine,” '),
+           ('narrator','Maya said. '),('eli','“Then we still have time,” '),('narrator','Eli replied, setting down his cup.')]
+    source=''.join(t for _,t in parts);segments=[];cursor=0
+    for cid,text in parts:
+        segments.append({'speaker':cid,'start':cursor,'end':cursor+len(text),'text':text});cursor+=len(text)
+    folder=project/'chapters/001';folder.mkdir(parents=True,exist_ok=True);(folder/'source.txt').write_text(source,encoding='utf-8')
+    save(folder/'script.json',{'source_sha256':digest(source.encode()),'source_reviewed':True,'notes':['Original demo written for this repository; not taken from a book.'],'segments':segments})
+    cast={'characters':{},'voices':{}}
+    for cid,name,role,evidence,design in [
+        ('narrator','Narrator','Reads setting and attribution tags','Narrative spans in demo','Adult neutral English narrator, warm medium-low register, clear diction, restrained delivery.'),
+        ('maya','Maya','Adult traveler checking train time','Explicit dialogue tag: Maya said','Adult female English voice, medium register, clear and matter-of-fact, slightly brisk; distinct from narrator.'),
+        ('eli','Eli','Adult traveler responding to Maya','Explicit dialogue tag: Eli replied','Adult male English voice, lighter medium register, calm conversational cadence; distinct from narrator.')]:
+        cast['characters'][cid]={'name':name,'role':role,'evidence':[evidence],'role_reviewed':True,'voice_description':design,'default_voice':None,'aliases':[]}
+    save(project/'cast.json',cast)
+    for cid in cast['characters']:plan_voice(project,cid,cid+'-v1','The morning light falls across the table. There is time to think before the journey begins.')
+    return project
+
+def main():
+    ap=argparse.ArgumentParser(prog='epub-drama');sub=ap.add_subparsers(dest='command',required=True)
+    p=sub.add_parser('extract');p.add_argument('epub');p.add_argument('project')
+    p=sub.add_parser('demo');p.add_argument('project')
+    p=sub.add_parser('validate');p.add_argument('project');p.add_argument('chapter');p.add_argument('--allow-planned',action='store_true')
+    p=sub.add_parser('voice-plan');p.add_argument('project');p.add_argument('character');p.add_argument('voice');p.add_argument('--reference-text',required=True);p.add_argument('--language',default='English');p.add_argument('--revision',default='main')
+    p=sub.add_parser('voice-design');p.add_argument('project');p.add_argument('voice')
+    p=sub.add_parser('render');p.add_argument('project');p.add_argument('chapter');p.add_argument('--revision',default='main')
+    p=sub.add_parser('kaggle-package');p.add_argument('project');p.add_argument('chapter');p.add_argument('slug');p.add_argument('destination');p.add_argument('--reference-kernel');p.add_argument('--design-missing',action='store_true')
+    p=sub.add_parser('import-voices');p.add_argument('project');p.add_argument('returned_project')
+    p=sub.add_parser('mp3');p.add_argument('wav');p.add_argument('output')
+    a=ap.parse_args()
+    try:
+        if a.command=='extract':
+            from .epub import extract
+            print(json.dumps(extract(a.epub,a.project),ensure_ascii=False,indent=2))
+        elif a.command=='demo':print(make_demo(a.project))
+        elif a.command=='validate':
+            b=bindings(a.project,a.chapter,require_audio=not a.allow_planned)
+            print(json.dumps({'status':'PASS','scope':'text/identity/voice contracts only; not audible quality','planned_references_allowed':a.allow_planned,'binding_sha256':b['binding_sha256']},indent=2))
+        elif a.command=='voice-plan':plan_voice(a.project,a.character,a.voice,a.reference_text,a.language,a.revision)
+        elif a.command=='voice-design':
+            from .tts import design_voice
+            v=load(Path(a.project)/'cast.json')['voices'][a.voice]
+            print(json.dumps(design_voice(a.project,v['character'],a.voice,v['reference_text'],v['language'],v['model_revision']),indent=2))
+        elif a.command=='render':
+            from .tts import render
+            print(render(a.project,a.chapter,a.revision))
+        elif a.command=='kaggle-package':
+            from .kaggle import package
+            print(package(a.project,a.chapter,a.slug,a.destination,a.reference_kernel,a.design_missing))
+        elif a.command=='import-voices':
+            from .core import import_voices
+            print(json.dumps(import_voices(a.project,a.returned_project)))
+        elif a.command=='mp3':
+            if Path(a.output).exists():raise ContractError('Output already exists; choose a new filename')
+            subprocess.run(['ffmpeg','-nostdin','-i',a.wav,'-codec:a','libmp3lame','-b:a','96k',a.output],check=True)
+    except (ContractError,KeyError,FileNotFoundError) as e:
+        ap.exit(2,f'Error: {e}\n')
+
+if __name__=='__main__':main()

@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "epub-audio-drama"
+version = "0.1.0"
+description = "Verbatim, full-cast EPUB audiobooks with persistent Qwen3-TTS voices"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = []
+
+[project.optional-dependencies]
+tts = ["qwen-tts", "soundfile", "numpy"]
+
+[project.scripts]
+epub-drama = "epub_audio_drama.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+epub_audio_drama = ["LICENSE.txt"]

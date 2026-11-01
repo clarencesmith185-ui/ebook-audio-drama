@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv*/
+.env*
+!.env.example
+projects/
+private/
+runs/
+dist/
+build/
+*.epub
+*.wav
+*.mp3
+*.flac
+kaggle.json
+*credentials*
