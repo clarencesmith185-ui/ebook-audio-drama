@@ -47,28 +47,87 @@ epub-drama validate projects/demo 001 --allow-planned
 
 The demo is an original short café scene with three roles. Its voice references are deliberately **planned, not generated**. `--allow-planned` checks the text and casting contracts; it is not an audio-quality or render-readiness claim.
 
-### Render the demo on Kaggle
+### Optional Kaggle backend: configure once, run from the CLI
+
+No local CUDA GPU is needed. Use Python 3.11+ for the Kaggle client and set your
+API token in your shell (the application does **not** read `.env` files):
 
 ```sh
-epub-drama kaggle-package projects/demo 001 YOUR_USERNAME/epub-drama-demo runs/demo-v1 --design-missing
-# Inspect run.py, kernel-metadata.json and payload-manifest.json first.
-kaggle kernels push -p runs/demo-v1
-kaggle kernels status YOUR_USERNAME/epub-drama-demo
-# Once terminal, retrieve that exact version into its own directory:
-kaggle kernels output YOUR_USERNAME/epub-drama-demo/1 -p runs/demo-v1/output
+python -m pip install -e '.[kaggle]'
+export KAGGLE_API_TOKEN='your-token-from-kaggle-settings'
+export KAGGLE_USERNAME='your-lowercase-kaggle-username'
+epub-drama kaggle-run projects/demo 001 --design-missing
 ```
 
-Set your real lowercase Kaggle username/slug in the command. Packaging does **not** upload anything; the separate `kaggle kernels push` does. `--design-missing` explicitly authorizes the generated notebook to create **only already-planned voices**, save their references, then render the selected chapter.
+That **explicit run command uploads the selected chapter and its voice inputs**
+to a new private GPU notebook, then returns a local `receipt.json` path. It
+packages and pushes automatically; there is no manual `kaggle kernels push` step.
+`--design-missing` permits creating only already-planned voice references.
+Account verification, GPU quota and model access still depend on Kaggle; a token
+cannot bypass them. Upload only text/recordings you have the rights to use.
 
-Retrieve the returned `project/` directory (usually under `output/epub-drama/project/`), preserve it and import its voice registry:
+To make ordinary `render` use Kaggle, create `projects/demo/execution.json`:
+
+```json
+{"backend": "kaggle", "kaggle": {"owner": "your-lowercase-kaggle-username"}}
+```
 
 ```sh
-epub-drama import-voices projects/demo runs/demo-v1/output/epub-drama/project
+epub-drama render projects/demo 001 --design-missing
+# Explicit override; local remains the default when execution.json is absent:
+epub-drama render projects/demo 001 --backend local
 ```
 
-Before the next chapter, reuse those locked references. For larger references, use `--reference-kernel OWNER/PREVIOUS_KERNEL` to mount prior notebook outputs instead of embedding them. Runtime SHA-256 checks require the exact expected WAV/FLAC files, even if Kaggle attaches a newer notebook version. Missing or changed references fail rather than creating replacement voices. Keep each uploaded source/version and downloaded output in a separate directory.
+With a modern token, the owner is just the notebook namespace, not another
+credential. Set it once in `execution.json` or `KAGGLE_USERNAME`, or pass `--owner`.
+Legacy `KAGGLE_USERNAME` + `KAGGLE_KEY`, `~/.kaggle/kaggle.json`, and
+`~/.kaggle/access_token` are supported too (including `KAGGLE_CONFIG_DIR`). Never
+put credentials in project JSON, payloads, command arguments or Git. See
+[Kaggle's official authentication documentation](https://github.com/Kaggle/kaggle-cli/blob/main/docs/README.md#authentication).
 
-Kaggle limits source size; the packager rejects scripts at or above 1,000,000 bytes. No dataset, model, account or credential is bundled with this repository.
+### Retrieve speech or run background-sound generation
+
+```sh
+# Use the actual receipt path printed by the run command:
+epub-drama kaggle-status /path/to/run/receipt.json
+# Once COMPLETE; retrieves audio, manifests and text/log evidence, not caches:
+epub-drama kaggle-download /path/to/run/receipt.json
+
+# A source-reviewed sound plan uploads only its prompts, durations and seeds:
+epub-drama sound-run examples/sound-plan.json --owner your-kaggle-username
+# Or reuse the owner in projects/demo/execution.json:
+epub-drama sound-run examples/sound-plan.json --project projects/demo
+```
+
+Both commands return immediately after submission. Check status later; there is
+no blocking poll loop or automatic scheduler. A unique notebook is created per
+run so another chapter/run cannot silently overwrite its source/version. Runs
+and receipts default to `$XDG_STATE_HOME/ebook-audio-drama/` (or
+`~/.local/state/ebook-audio-drama/`); `--run-dir` selects a new empty directory.
+Receipts contain notebook identity, payload hashes and returned version when
+available, never credentials. Status is explicitly the latest notebook session,
+not proof of a historical version. Downloads verify a run-specific completion
+marker before being accepted, hash each downloaded file, and refuse nonempty
+destinations. A failure/timeout during upload leaves `PUSH_UNCONFIRMED`; inspect
+the receipt's slug on Kaggle before launching again. Do not assume that means no
+GPU run was started.
+
+Speech output is usually under `output/epub-drama/project/`. After inspecting the
+returned files, merge saved voice references back into the local project:
+
+```sh
+epub-drama import-voices projects/demo /path/to/run/output/epub-drama/project
+```
+
+Use `--reference-kernel OWNER/PREVIOUS_KERNEL` for larger saved references;
+matching reference hashes are checked remotely. Missing/changed references fail
+closed. Source remains limited to 1 MB. New Kaggle execution does not automatically
+import voices, mix sounds, or approve listening quality. Use the returned assets
+with [the local sound-mix workflow](docs/SOUND_DESIGN.md), which preserves dry
+voices and requires hash-bound listening approval or an explicit draft flag.
+
+For offline review only, the existing `kaggle-package` and `sound-package`
+commands still prepare payloads without uploading or requiring credentials.
 
 ### Or use your own CUDA GPU
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Optional Kaggle execution with token/legacy authentication, owner configuration, automatic private notebook submission, receipts, status and run-bound filtered downloads.
+- Local rendering remains default; explicit commands are required for uploads.
+- Offline mocked coverage for credentials, routing, receipts, uncertainty and retrieval.
+
 ## 0.1.0 — initial prepared release
 
 - EPUB spine extraction and explicit whitespace-normalization manifest.

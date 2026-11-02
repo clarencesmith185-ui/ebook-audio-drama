@@ -30,15 +30,29 @@ def main():
     p=sub.add_parser('validate');p.add_argument('project');p.add_argument('chapter');p.add_argument('--allow-planned',action='store_true')
     p=sub.add_parser('voice-plan');p.add_argument('project');p.add_argument('character');p.add_argument('voice');p.add_argument('--reference-text',required=True);p.add_argument('--language',default='English');p.add_argument('--revision',default='main')
     p=sub.add_parser('voice-design');p.add_argument('project');p.add_argument('voice')
-    p=sub.add_parser('render');p.add_argument('project');p.add_argument('chapter');p.add_argument('--revision',default='main')
+    p=sub.add_parser('render');p.add_argument('project');p.add_argument('chapter');p.add_argument('--revision',default='main');p.add_argument('--backend',choices=('local','kaggle'));p.add_argument('--owner');p.add_argument('--run-dir');p.add_argument('--reference-kernel');p.add_argument('--design-missing',action='store_true')
     p=sub.add_parser('kaggle-package');p.add_argument('project');p.add_argument('chapter');p.add_argument('slug');p.add_argument('destination');p.add_argument('--reference-kernel');p.add_argument('--design-missing',action='store_true')
     p=sub.add_parser('import-voices');p.add_argument('project');p.add_argument('returned_project')
     p=sub.add_parser('mp3');p.add_argument('wav');p.add_argument('output')
     p=sub.add_parser('sound-package');p.add_argument('plan');p.add_argument('slug');p.add_argument('destination')
     p=sub.add_parser('sound-mix');p.add_argument('plan');p.add_argument('master');p.add_argument('assets');p.add_argument('output');p.add_argument('--unreviewed-draft',action='store_true');p.add_argument('--review');p.add_argument('--background-boost-db',type=float,default=0)
+    p=sub.add_parser('kaggle-run');p.add_argument('project');p.add_argument('chapter');p.add_argument('--owner');p.add_argument('--run-dir');p.add_argument('--reference-kernel');p.add_argument('--design-missing',action='store_true')
+    p=sub.add_parser('sound-run');p.add_argument('plan');p.add_argument('--project');p.add_argument('--owner');p.add_argument('--run-dir')
+    p=sub.add_parser('kaggle-status');p.add_argument('receipt')
+    p=sub.add_parser('kaggle-download');p.add_argument('receipt');p.add_argument('--destination')
     a=ap.parse_args()
     try:
-        if a.command=='sound-package':
+        if a.command in ('kaggle-run','sound-run'):
+            from .remote import run
+            if a.command=='kaggle-run':print(run('speech',a.project,a.chapter,owner=a.owner,run_dir=a.run_dir,design_missing=a.design_missing,reference_kernel=a.reference_kernel))
+            else:print(run('sound',project=a.project,plan=a.plan,owner=a.owner,run_dir=a.run_dir))
+        elif a.command=='kaggle-status':
+            from .remote import status
+            print(json.dumps(status(a.receipt),indent=2))
+        elif a.command=='kaggle-download':
+            from .remote import download
+            print(download(a.receipt,a.destination))
+        elif a.command=='sound-package':
             from .sound import package
             print(package(a.plan,a.slug,a.destination))
         elif a.command=='sound-mix':
@@ -57,8 +71,14 @@ def main():
             v=load(Path(a.project)/'cast.json')['voices'][a.voice]
             print(json.dumps(design_voice(a.project,v['character'],a.voice,v['reference_text'],v['language'],v['model_revision']),indent=2))
         elif a.command=='render':
-            from .tts import render
-            print(render(a.project,a.chapter,a.revision))
+            from .remote import backend,run
+            if backend(a.project,a.backend)=='kaggle':
+                if a.revision!='main':raise ContractError('Kaggle uses model revisions locked in cast.json; --revision is local only')
+                print(run('speech',a.project,a.chapter,owner=a.owner,run_dir=a.run_dir,design_missing=a.design_missing,reference_kernel=a.reference_kernel))
+            else:
+                if a.owner or a.run_dir or a.reference_kernel or a.design_missing:raise ContractError('Kaggle options require --backend kaggle or configured Kaggle backend')
+                from .tts import render
+                print(render(a.project,a.chapter,a.revision))
         elif a.command=='kaggle-package':
             from .kaggle import package
             print(package(a.project,a.chapter,a.slug,a.destination,a.reference_kernel,a.design_missing))
@@ -68,7 +88,7 @@ def main():
         elif a.command=='mp3':
             if Path(a.output).exists():raise ContractError('Output already exists; choose a new filename')
             subprocess.run(['ffmpeg','-nostdin','-i',a.wav,'-codec:a','libmp3lame','-b:a','96k',a.output],check=True)
-    except (ContractError,KeyError,FileNotFoundError) as e:
+    except (ContractError,KeyError,FileNotFoundError,json.JSONDecodeError) as e:
         ap.exit(2,f'Error: {e}\n')
 
 if __name__=='__main__':main()

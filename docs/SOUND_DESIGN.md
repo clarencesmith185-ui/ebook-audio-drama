@@ -47,3 +47,19 @@ Send the new MP3 explicitly as a replacement after a revision; include bytes/has
 ## Validation status and terms
 
 The isolated runtime/normalization/mixing approach was exercised in a separate private project. This cleaned reusable implementation has offline contract tests; its new Kaggle wrapper is not independently end-to-end validated. No private project assets are included. TangoFlux checkpoint terms checked during that work restricted use to **non-commercial research**; MIT here covers our code, not model weights. Recheck upstream terms for your intended use. Do not assume download access grants unrestricted redistribution.
+
+## Submit directly with configured Kaggle credentials
+
+Install `.[kaggle]`, set `KAGGLE_API_TOKEN` and `KAGGLE_USERNAME`, then run:
+
+```sh
+epub-drama sound-run examples/sound-plan.json
+epub-drama kaggle-status /path/to/receipt.json
+epub-drama kaggle-download /path/to/receipt.json
+```
+
+The run command prints a receipt path under `~/.local/state/ebook-audio-drama/`.
+Only prompts/durations/seeds are uploaded, never the master or cue source
+anchors. The notebook stays private and gets a unique name per run. Generated
+assets still need manifest checks and listening review before mixing; completion
+does not imply audible quality. See the README for configuration and receipts.

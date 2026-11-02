@@ -23,7 +23,9 @@ def package(root,chapter,slug,destination,reference_kernel=None,design_missing=F
     with zipfile.ZipFile(buf,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
         for name,data in files.items():z.writestr(name,data)
     code='PAYLOAD='+repr(base64.b64encode(buf.getvalue()).decode())+'\nHASHES='+repr({k:digest(v) for k,v in files.items()})+'\nCHAPTER='+repr(chapter)+'\nDESIGN_MISSING='+repr(design_missing)+'\n'
-    code+='''import base64,io,zipfile,sys,subprocess,hashlib,json,shutil
+    code+='''import base64,io,zipfile,sys,subprocess,hashlib,json,shutil,os
+os.environ['HF_HOME']='/tmp/ead-hf'
+os.environ['PIP_CACHE_DIR']='/tmp/ead-pip'
 from pathlib import Path
 subprocess.check_call([sys.executable,'-m','pip','install','qwen-tts','soundfile','numpy'])
 work=Path('/kaggle/working/epub-drama');work.mkdir(parents=True,exist_ok=True)

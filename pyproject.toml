@@ -12,6 +12,7 @@ license = {text = "MIT"}
 dependencies = []
 
 [project.optional-dependencies]
+kaggle = ["kaggle>=2.2.0"]
 sound = ["numpy", "soundfile", "scipy"]
 tts = ["qwen-tts", "soundfile", "numpy"]
 
