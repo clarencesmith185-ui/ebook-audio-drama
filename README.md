@@ -4,11 +4,48 @@
 
 A small, review-first Python workflow for turning an EPUB into a **full-cast, unabridged audiobook** with Qwen3-TTS. It preserves narration and dialogue tags rather than rewriting a novel into a screenplay.
 
-```text
-EPUB spine → normalized source → reviewed speaker spans → character/voice registry
-                                                       ↓
-                     chapter audio ← resumable GPU rendering ← immutable voice references
+## Workflow
+
+```mermaid
+flowchart TD
+    A[EPUB] --> B[Extract source in spine order]
+    B --> C[Review speaker spans and character roles]
+    C --> D[Plan persistent voices and validate source]
+    D --> E{Speech backend}
+
+    E -->|Local CUDA| F[Design missing references, then clone voices]
+    E -->|Kaggle token and owner| G[Submit private speech notebook]
+    G --> H[Check status and verify downloaded outputs]
+    H --> I[Import returned voice references locally]
+    F --> J[Clean chapter voice master]
+    I --> J
+
+    J --> K{Add background sounds?}
+    K -->|No| R[Export voice-only MP3]
+    K -->|Yes| L[Review scene-timed sound plan]
+    L --> M[Submit private TangoFlux notebook]
+    M --> N[Verify downloaded assets and review sounds]
+    N --> O[Mix locally beneath unchanged voices]
+    J --> O
+    O --> P[Check source binding, dry PCM and audio peaks]
+    P --> Q[Listen and approve final mix]
+    Q --> S[Mixed WAV and MP3]
 ```
+
+**Review first:** unresolved speakers or changed source/reference hashes block
+speech rendering. Each person keeps a saved voice reference across chapters;
+matching segment checkpoints let speech rendering resume.
+
+**Kaggle is optional:** local speech rendering is the default. Configure
+`KAGGLE_API_TOKEN` plus a notebook owner to submit speech or sound runs. Submission,
+status and download are separate commands; voice import, sound review, mixing and
+final listening approval are explicit local steps, not automatic consequences of
+a completed notebook. Sound notebooks receive only asset IDs, prompts, durations
+and seeds—not the book or voice master. A deliberately unreviewed sound mix must
+use the explicit draft flag and is not an approved final.
+
+See [Kaggle setup](#optional-kaggle-backend-configure-once-run-from-the-cli),
+[casting](docs/CASTING.md) and [background-sound generation and mixing](docs/SOUND_DESIGN.md).
 
 ## What it does
 
