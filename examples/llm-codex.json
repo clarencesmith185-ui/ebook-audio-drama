@@ -1,0 +1,5 @@
+{
+  "backend": "codex",
+  "model": "YOUR_CODEX_MODEL_ID",
+  "timeout_seconds": 180
+}

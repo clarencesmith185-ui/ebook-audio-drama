@@ -9,7 +9,12 @@ A small, review-first Python workflow for turning an EPUB into a **full-cast, un
 ```mermaid
 flowchart TD
     A[EPUB] --> B[Extract source in spine order]
-    B --> C[Review speaker spans and character roles]
+    B --> LLM{Optional LLM preparation}
+    LLM -->|API key / compatible endpoint| API[Generate unreviewed suggestions]
+    LLM -->|Codex CLI / ChatGPT login| CODEX[Generate unreviewed suggestions]
+    LLM -->|Manual| C[Review speaker spans and character roles]
+    API --> C
+    CODEX --> C
     C --> D[Plan persistent voices and validate source]
     D --> E{Speech backend}
 
@@ -50,7 +55,7 @@ See [Kaggle setup](#optional-kaggle-backend-configure-once-run-from-the-cli),
 ## What it does
 
 - Extracts body text in EPUB spine order, retaining headings and notes.
-- Builds quotation-review scaffolds. **It does not guess speakers automatically.**
+- Builds quotation-review scaffolds. Optional API/Codex LLM preparation proposes speaker assignments for explicit human review; the default scaffold does not infer speakers.
 - Keeps canonical character IDs separate from names, aliases and voice versions.
 - Requires a source-supported role and a matching voice description before casting.
 - Uses Qwen3-TTS **VoiceDesign → Base voice cloning**, retaining each reference WAV and transcript.
@@ -61,6 +66,32 @@ See [Kaggle setup](#optional-kaggle-backend-configure-once-run-from-the-cli),
 - Packages prompt-only TangoFlux sound generation and mixes scene-timed ambience/Foley beneath unchanged voices; see [background sounds](docs/SOUND_DESIGN.md).
 
 **Status:** initial reference implementation. The underlying approach has been exercised in a separate private pilot/chapter workflow. The original speech workflow passed **13 offline contract tests**; the original public demo has now completed GPU speech and ambience generation, voice import, local mixing and technical audio validation (listening approval remains pending). No book or generated voice samples from that private project are included.
+
+## Optional API or subscription-based LLM preparation
+
+Use an API-key LLM via OpenAI-compatible Chat Completions, or the official Codex
+CLI signed in with ChatGPT. Both produce **unreviewed suggestions** for casting,
+speaker spans, voice descriptions and sound cues; neither rewrites source,
+approves scripts or replaces locked voices. Manual preparation remains available.
+
+```sh
+# API: edit model/base_url as needed; credentials stay in the environment.
+cp examples/llm-api.json llm.local.json
+export OPENAI_API_KEY='your-api-key'
+epub-drama llm-prepare projects/my-book 001 --config llm.local.json
+
+# Alternative: edit the Codex model ID and use saved ChatGPT login.
+cp examples/llm-codex.json llm.local.json
+codex login
+epub-drama llm-prepare projects/my-book 001 --config llm.local.json
+```
+
+Review `projects/my-book/llm-review/001.suggestions.json`, then manually apply
+accepted suggestions to the normal script/cast and run validation. LLM preparation
+runs locally; Kaggle handles audio generation separately and receives no LLM
+configuration or login credentials. Subscription model access and limits still
+apply; API providers bill separately. See [setup, data boundaries and review
+steps](docs/LLM_PREPARATION.md). Live LLM-provider integration is not yet tested.
 
 ## Listen to the original demo
 

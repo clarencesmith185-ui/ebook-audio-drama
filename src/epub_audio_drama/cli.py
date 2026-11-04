@@ -1,4 +1,4 @@
-"""Explicit local commands; no provider credentials or remote launch side effects."""
+"""Explicit review, local rendering and opt-in provider commands."""
 import argparse,json,sys,subprocess
 from pathlib import Path
 from .core import ContractError,load,save,bindings,plan_voice,digest
@@ -25,6 +25,7 @@ def make_demo(project):
 
 def main():
     ap=argparse.ArgumentParser(prog='epub-drama');sub=ap.add_subparsers(dest='command',required=True)
+    p=sub.add_parser('llm-prepare');p.add_argument('project');p.add_argument('chapter');p.add_argument('--config',required=True);p.add_argument('--output')
     p=sub.add_parser('extract');p.add_argument('epub');p.add_argument('project')
     p=sub.add_parser('demo');p.add_argument('project')
     p=sub.add_parser('validate');p.add_argument('project');p.add_argument('chapter');p.add_argument('--allow-planned',action='store_true')
@@ -42,7 +43,10 @@ def main():
     p=sub.add_parser('kaggle-download');p.add_argument('receipt');p.add_argument('--destination')
     a=ap.parse_args()
     try:
-        if a.command in ('kaggle-run','sound-run'):
+        if a.command=='llm-prepare':
+            from .llm import prepare
+            print(prepare(a.project,a.chapter,a.config,a.output))
+        elif a.command in ('kaggle-run','sound-run'):
             from .remote import run
             if a.command=='kaggle-run':print(run('speech',a.project,a.chapter,owner=a.owner,run_dir=a.run_dir,design_missing=a.design_missing,reference_kernel=a.reference_kernel))
             else:print(run('sound',project=a.project,plan=a.plan,owner=a.owner,run_dir=a.run_dir))

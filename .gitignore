@@ -18,3 +18,6 @@ kaggle.json
 
 # Only the original public listening demo may be committed.
 !docs/demo/*.mp3
+
+# Per-machine LLM settings (API secrets belong in env, not config).
+llm.local.json
