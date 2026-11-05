@@ -67,6 +67,39 @@ See [Kaggle setup](#optional-kaggle-backend-configure-once-run-from-the-cli),
 
 **Status:** initial reference implementation. The underlying approach has been exercised in a separate private pilot/chapter workflow. The original speech workflow passed **13 offline contract tests**; the original public demo has now completed GPU speech and ambience generation, voice import, local mixing and technical audio validation (listening approval remains pending). No book or generated voice samples from that private project are included.
 
+## Episode duration (local or downloaded Kaggle renders)
+
+Use `--episode-minutes` when exporting an existing speech run. For example,
+roughly ten-minute episodes with optional MP3 listening copies:
+
+```sh
+epub-drama episodes PROJECT 001 PATH/TO/RENDER_RUN OUTPUT/episodes \
+  --episode-minutes 10 --mp3
+```
+
+`PATH/TO/RENDER_RUN` is the directory containing `chapter.wav`, `report.json`,
+and the numbered segment WAV/checkpoint JSON files. For a Kaggle run, download
+its outputs first and use the matching project's source/script. No GPU, LLM
+call, new voice generation or upload is needed. Omit `--mp3` for lossless WAVs
+only; MP3 copies require FFmpeg.
+
+The duration is a **target, not a hard maximum**. The exporter balances the
+parts (including the tail), cutting only in existing inter-unit pauses after
+sentence-ending text. It never cuts inside a rendered speech unit. Where no
+eligible boundary exists, a part can be substantially longer; a short chapter
+stays a single episode. It does not abridge, change speech speed, combine chapters
+or infer word-level alignment. Sentence detection is a punctuation heuristic,
+not a listening-approved linguistic parser.
+
+Export produces numbered WAVs, optional 96 kbps MP3s, and `episodes.json` with
+actual durations, sample/source ranges and hashes. Rejoining the WAV PCM is
+verified to reproduce the **entire** chapter master exactly, including pauses;
+MP3 encoding is lossy. Source/script and segment checkpoint hashes are checked
+before export. Existing output directories are refused; originals stay untouched.
+This command accepts the original mono PCM16 speech master, not an arbitrary
+or mixed WAV. Mix each selected episode separately if ambience is wanted.
+Listening/word-accuracy status is not upgraded by splitting.
+
 ## Optional API or subscription-based LLM preparation
 
 Use an API-key LLM via OpenAI-compatible Chat Completions, or the official Codex

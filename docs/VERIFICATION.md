@@ -7,6 +7,7 @@
 | Reference WAV SHA | Exactly the retained reference bytes | No audible voice drift |
 | Per-segment audio signature | Checkpoint bound to segment/voice/config | Good pronunciation |
 | Finite nonempty samples | Audio exists and is numerically valid | No repetition, missing words or unwanted sounds |
+| Episode export PCM reconstruction | WAV parts partition the unchanged speech master, without missing/duplicated frames | Exact target lengths, audible word accuracy or MP3 losslessness |
 | Duration heuristic | A candidate for inspection | Proof of a bad or correct segment |
 | Private Kaggle metadata | Requested visibility at packaging time | Actual account visibility or successful execution |
 

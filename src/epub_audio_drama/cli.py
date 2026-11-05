@@ -26,6 +26,7 @@ def make_demo(project):
 def main():
     ap=argparse.ArgumentParser(prog='epub-drama');sub=ap.add_subparsers(dest='command',required=True)
     p=sub.add_parser('llm-prepare');p.add_argument('project');p.add_argument('chapter');p.add_argument('--config',required=True);p.add_argument('--output')
+    p=sub.add_parser('episodes',help='Split an existing speech render at sentence pauses');p.add_argument('project');p.add_argument('chapter');p.add_argument('run');p.add_argument('output');p.add_argument('--episode-minutes',type=float,required=True);p.add_argument('--mp3',action='store_true')
     p=sub.add_parser('extract');p.add_argument('epub');p.add_argument('project')
     p=sub.add_parser('demo');p.add_argument('project')
     p=sub.add_parser('validate');p.add_argument('project');p.add_argument('chapter');p.add_argument('--allow-planned',action='store_true')
@@ -46,6 +47,9 @@ def main():
         if a.command=='llm-prepare':
             from .llm import prepare
             print(prepare(a.project,a.chapter,a.config,a.output))
+        elif a.command=='episodes':
+            from .episodes import export
+            print(export(a.project,a.chapter,a.run,a.output,a.episode_minutes,a.mp3))
         elif a.command in ('kaggle-run','sound-run'):
             from .remote import run
             if a.command=='kaggle-run':print(run('speech',a.project,a.chapter,owner=a.owner,run_dir=a.run_dir,design_missing=a.design_missing,reference_kernel=a.reference_kernel))
